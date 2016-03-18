@@ -26,10 +26,14 @@
 module hawkularRest {
 
   _module.constant('inventoryInterceptURLS',
-      [new RegExp('.+/inventory/.+/resources/.+%2F.+', 'i'), new RegExp('.+/inventory/.+/resources/.+%252F.+', 'i')]);
+      [
+        new RegExp('.+/inventory/.+/resources/.+%2F.+', 'i'), new RegExp('.+/inventory/.+/resources/.+%252F.+', 'i'),
+        new RegExp('.+/inventory/.+/resources/.+%3D.+', 'i'), new RegExp('.+/inventory/.+/resources/.+%253D.+', 'i')
+      ]);
 
   _module.config(['$httpProvider', 'inventoryInterceptURLS', function($httpProvider, inventoryInterceptURLS) {
     const SLASH = '/';
+    const EQUALS = '%';
 
     const ENCODED_SLASH = '%2F';
     const ENCODED_SLASH_RE = new RegExp(ENCODED_SLASH, 'gi');
@@ -37,16 +41,30 @@ module hawkularRest {
     const DOUBLE_ENCODED_SLASH = '%252F';
     const DOUBLE_ENCODED_SLASH_RE = new RegExp(DOUBLE_ENCODED_SLASH, 'gi');
 
+    const ENCODED_EQUALS = '%3D';
+    const ENCODED_EQUALS_RE = new RegExp(ENCODED_EQUALS, 'gi');
+
+    const DOUBLE_ENCODED_EQUALS = '%253D';
+    const DOUBLE_ENCODED_EQUALS_RE = new RegExp(DOUBLE_ENCODED_EQUALS, 'gi');
+
     $httpProvider.interceptors.push(function ($q) {
       return {
         'request': function (config) {
           var url = config.url;
 
           for (var i = 0; i < inventoryInterceptURLS.length; i++) {
-
             if (url.match(inventoryInterceptURLS[i])) {
               // first step: %2F -> / ; second step: %252F -> %2F (the order is important here)
               url = url.replace(ENCODED_SLASH_RE, SLASH).replace(DOUBLE_ENCODED_SLASH_RE, ENCODED_SLASH);
+              // end there is only one matching url
+              break;
+            }
+          }
+
+          for (var i = 0; i < inventoryInterceptURLS.length; i++) {
+            if (url.match(inventoryInterceptURLS[i])) {
+              // first step: %2F -> / ; second step: %252F -> %2F (the order is important here)
+              url = url.replace(ENCODED_EQUALS_RE, EQUALS).replace(DOUBLE_ENCODED_EQUALS_RE, ENCODED_EQUALS);
               // end there is only one matching url
               break;
             }
